@@ -21,49 +21,38 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 window.plugin.manageFarm = function() {};
 
 window.plugin.manageFarm.setupCallback = function() {
-  $('#toolbox').append('<a onclick="window.plugin.manageFarm.view()">view farm</a> ');
-  addHook('portalAdded', window.plugin.manageFarm.extractPortalData);
+  $('#toolbox').append('<a onclick="window.plugin.manageFarm.view()">export portal list</a> ');
+    addHook('portalAdded', window.plugin.manageFarm.extractPortalData);
 }
 
 window.plugin.manageFarm.view = function() {
   var s= '';
   $.each(window.portals, function(ind, portal) {
       var d = portal.options.details;   
-      s += d.portalV2.descriptiveText.TITLE + ' \t' + getPortalLevel(d).toString().replace('.', ',') + ' \t'  
+      s += portal.options.team + '\t' + d.portalV2.descriptiveText.TITLE + ' \t' + getPortalLevel(d).toString().replace('.', ',') + ' \t'  
       
-          //getAttackApGain(d).totalAp + ' AP \n'; ; 
    var r = portal.options.details.resonatorArray.resonators;
    $.each(r, function(ind, reso) {
-      if(!reso) return true;
+       if(!reso) 
+           s+='\t'; 
+       else
       s += + reso.level + '\t';
    });
    $.each(d.portalV2.linkedModArray, function(ind, mod) {
-     if (!mod) return true; 
+       if (!mod) 
+           s+='\t'; 
+       else
       s+= mod.rarity.capitalize().replace('_', ' ') + '\t';
    });    
-   s+='\n';
+   s+= getAttackApGain(d).totalAp + '\n';
   });
 
+  
  
- /* var namesR = plugin.guessPlayerLevels.sort(playersRes);
-  var namesE = plugin.guessPlayerLevels.sort(playersEnl);
-  var max = Math.max(namesR.length, namesE.length);
-  for(var i = 0; i < max; i++) {
-    var nickR = namesR[i];
-    var lvlR = playersRes[nickR];
-    var lineR = nickR ? nickR + ':\t' + lvlR : '\t';
-
-    var nickE = namesE[i];
-    var lvlE = playersEnl[nickE];
-    var lineE = nickE ? nickE + ':\t' + lvlE : '\t';
-
-    s += lineR + '\t\t' + lineE + '\n';
-  }
-*/
   console.log(s);
   alert(s);
+    
 }
-
 
 var setup =  function() {
   window.plugin.manageFarm.setupCallback();
