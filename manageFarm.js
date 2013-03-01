@@ -32,17 +32,33 @@ window.plugin.manageFarm.view = function() {
       s += portal.options.team + '\t' + d.portalV2.descriptiveText.TITLE + ' \t' + getPortalLevel(d).toString().replace('.', ',') + ' \t'  
       
    var r = portal.options.details.resonatorArray.resonators;
-   $.each(r, function(ind, reso) {
+   r.reverse();
+   //sort reso by levels
+  /* $.each(r, function(ind, reso) {
+       if(!reso)
+           var thisR = new Array();
+           thisR[0] = reso.level; // reso level
+            thisR[1] = window.getPlayerName(reso.ownerGuid); //reso deployed by
+       	   thisR[2] = reso.distanceToPortal; // distance to portal 
+           thisR[3] = reso.energyTotal; // energy total 
+      	   thisR[4] = RESO_NRG[reso.level]; //max energy
+           i++;
+   });
+   */
+    
+    $.each(r, function(ind, reso) {
        if(!reso) 
            s+='\t'; 
        else
       s += + reso.level + '\t';
    });
+   
    $.each(d.portalV2.linkedModArray, function(ind, mod) {
        if (!mod) 
            s+='\t'; 
        else
       s+= mod.rarity.capitalize().replace('_', ' ') + '\t';
+       //getPlayerName(mod.installingUser)
    });    
    s+= getAttackApGain(d).totalAp + '\n';
   });
