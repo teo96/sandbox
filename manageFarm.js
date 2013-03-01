@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-managefarm@teo96
 // @name           iitc: manage a portal farm
-// @version        0.0.1
+// @version        0.0.2
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
 // @updateURL      https://raw.github.com/breunigs/ingress-intel-total-conversion/gh-pages/plugins/guess-player-levels.user.js
 // @downloadURL    https://raw.github.com/breunigs/ingress-intel-total-conversion/gh-pages/plugins/guess-player-levels.user.js
