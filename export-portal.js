@@ -21,50 +21,86 @@ if(typeof window.plugin !== 'function') window.plugin = function() {};
 window.plugin.manageFarm = function() {};
 
 window.plugin.manageFarm.setupCallback = function() {
-  $('#toolbox').append('<a onclick="window.plugin.manageFarm.view()">export portal list</a> ');
+  $('#toolbox').append('<a onclick="window.plugin.manageFarm.view()">Export Portails</a> ');
 }
 
 window.plugin.manageFarm.view = function() {
-  var s= '';
-  $.each(window.portals, function(ind, portal) {
-      var d = portal.options.details;   
-      s += portal.options.team + '\t' + d.portalV2.descriptiveText.TITLE + ' \t' + getPortalLevel(d).toString().replace('.', ',') + ' \t'  
+//version github
+var s= '';
+  var nbrePortal = 0;
+    
+    $.each(window.portals, function(ind, portal) { 
+        nbrePortal++;
+        var d = portal.options.details;   
+      s += d.portalV2.descriptiveText.TITLE + '\t' + portal.options.team + ' \t' + getPortalLevel(d).toString().replace('.', ',') + ' \t'  
       
+   // create a array for resos with usefull info
    var r = portal.options.details.resonatorArray.resonators;
    var myR = [];
    var i=0;
    $.each(r, function(ind, reso) {
-           // reso level, reso deployed by, distance to portal, energy total, max 
-           myR[i] = [reso.level, window.getPlayerName(reso.ownerGuid), reso.distanceToPortal, reso.energyTotal, RESO_NRG[reso.level]]
-           //console.log(myR[i].toString());
-           i++;
+       if (reso) {    
+       // reso level, reso deployed by, distance to portal, energy total, max 
+       myR[i] = [reso.level, window.getPlayerName(reso.ownerGuid), reso.distanceToPortal, reso.energyTotal, RESO_NRG[reso.level]];
+       } else { myR[i] = [0,'',0,0,0]; }
+    i++;
    });
-   
-   //console.log('avant ' + myR[0][0] + myR[1][0] + myR[2][0] + myR[3][0] + myR[4][0] + myR[5][0] + myR[6][0] + myR[7][0] + '\n');
+   //to debug this part
+   //console.log('\n\n ARRAY CONSTRUCT:' + myR[0].toString());
+   //sort resos by level
    myR.sort(function (a, b) {return b[0] - a[0]});
-   //console.log('aprés '  + myR[0][0] + myR[1][0] + myR[2][0] + myR[3][0] + myR[4][0] + myR[5][0] + myR[6][0] + myR[7][0]);
+   
+   //add resos level in the string
    $.each(myR, function(ind, reso) {
        if(!reso) 
            s+='\t'; 
        else
       s += + reso[0] + '\t';
    });
+   //to debug this part
+   //console.log('\n\n ADD RESOS : ' + s);
    
+   //add shield rarity in the string
    $.each(d.portalV2.linkedModArray, function(ind, mod) {
        if (!mod) 
            s+='\t'; 
        else
       s+= mod.rarity.capitalize().replace('_', ' ') + '\t';
-       //getPlayerName(mod.installingUser)
+      
+   });
+      
+   //add total ap gain 
+   s+= getAttackApGain(d).totalAp;
+   //to debug this part
+   //console.log('\n\n ADD SHIELDS & TOTAL AP : ' + s);
+   
+   // add who deployed reso
+   $.each(myR, function(ind, reso) {
+       s+='\t'; 
+       if(reso) 
+           s += reso[1];
+   });
+   //to debug this part
+   //console.log('\n\n WHO DEPLOYED RESO: ' + s);
+      
+   //add who deployed shield
+   $.each(d.portalV2.linkedModArray, function(ind, mod) {
+       s+='\t'; 
+       if (mod) 
+         s+= getPlayerName(mod.installingUser);           
    });    
-   s+= getAttackApGain(d).totalAp + '\n';
+   //to debug this part
+   //console.log('\n\n WHO DEPLOYED SHIELD: ' + s);
+   
+   s+= '\n';
   });
 
   
- 
-  console.log(s);
-  alert(s);
-    
+  if (confirm('Voulez vous afficher les informations détaillées des ' + nbrePortal + ' portails détectés ?')) { 
+      alert(s);
+      console.log(s);
+  }
+   
 }
 
 var setup =  function() {
