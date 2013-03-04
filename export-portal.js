@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-export-portal@teo96
 // @name           iitc:export portals informations
-// @version        0.0.2
+// @version        0.0.3
 // @namespace      https://github.com/teo96/sandbox/blob/master/
 // @updateURL      https://raw.github.com/teo96/sandbox/master/export-portal.js
 // @downloadURL    https://raw.github.com/teo96/sandbox/master/export-portal.js
