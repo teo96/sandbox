@@ -1,6 +1,6 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
-// @name           iitc: show list of portals.
+// @name           teo96: show list of portals
 // @version        0.0.1
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
 // @updateURL      
@@ -14,331 +14,139 @@ function wrapper() {
 // ensure plugin framework is there, even if iitc is not yet loaded
 if(typeof window.plugin !== 'function') window.plugin = function() {};
 
-
 // PLUGIN START ////////////////////////////////////////////////////////
 
 // use own namespace for plugin
 window.plugin.portalslist = function() {};
+    
+window.plugin.portalslist.listPortals = []; // structure : name, team, level, resonators = Array, Shields = Array, APgain
 
-window.plugin.portalslist.scores = {};
-window.plugin.portalslist.playerGuids = new Array();
-
-window.plugin.portalslist.resetTeam = function(team) {
-  var scores = window.plugin.portalslist.scores['team'];
-  scores[team] = {};
-  scores[team]['mu'] = 0;
-  scores[team]['count_fields'] = 0;
-  scores[team]['count_links'] = 0;
-  scores[team]['count_portals'] = 0;
-  scores[team]['count_resonators'] = 0;
-  scores[team]['largest'] = {};   
-};
-
-window.plugin.portalslist.initPlayer = function(player, team) {
-  var scores = window.plugin.portalslist.scores['player'];
-  if(scores[player] === undefined) {
-    scores[player] = {};
-    scores[player]['team'] = team;
-    scores[player]['mu'] = 0;
-    scores[player]['count_fields'] = 0;
-    scores[player]['count_links'] = 0;
-    scores[player]['count_portals'] = 0;
-    scores[player]['count_resonators'] = 0;
-    //  scores[player]['count_shields'] = 0;
-    scores[player]['largest'] = {};
-    window.plugin.portalslist.playerGuids.push(player);
-  }
-}
-
-window.plugin.portalslist.initPortals = function(portal, team) {
-  var list = window.plugin.portalslist.portals['portal'];
-  if(list[player] === undefined) {
-    scores[player] = {};
-    scores[player]['team'] = team;
-    scores[player]['mu'] = 0;
-    scores[player]['count_fields'] = 0;
-    scores[player]['count_links'] = 0;
-    scores[player]['count_portals'] = 0;
-    scores[player]['count_resonators'] = 0;
-    //  scores[player]['count_shields'] = 0;
-    scores[player]['largest'] = {};
-    window.plugin.portalslist.playerGuids.push(player);
-  }
-}
-
-window.plugin.portalslist.compileStats = function() {
-  var somethingInView = false;  
-  window.plugin.portalslist.playerGuids = new Array();
-  window.plugin.portalslist.scores = {'team': {}, 'player': {}};
-  var scores = window.plugin.portalslist.scores;
-  window.plugin.portalslist.resetTeam(TEAM_RES);
-  window.plugin.portalslist.resetTeam(TEAM_ENL);
+window.plugin.portalslist.getPortals = function(){
+    
+    var retval=false;
    
-  $.each(window.fields, function(qk, val) {
-    var team = getTeam(val.options.data);
-    var player = val.options.data.creator.creatorGuid;
-     
-    window.plugin.portalslist.initPlayer(player,team);    
+    //get portals informations from IITC
+    $.each(window.portals, function(i, portal) {
+        retval=true;
+        var d = portal.options.details;   
+        var name =  d.portalV2.descriptiveText.TITLE;
+        var team = portal.options.team;
+        var level = getPortalLevel(d).toString().replace('.', ',');
     
-    // Google sends fields long since dead in the data. This makes sure it's still actually up.
-    if(window.portals[val.options.vertices.vertexA.guid] !== undefined ||
-       window.portals[val.options.vertices.vertexB.guid] !== undefined ||
-       window.portals[val.options.vertices.vertexC.guid] !== undefined ) {
-      
-      somethingInView = true;
-      scores['team'][team]['mu'] += parseInt(val.options.data.entityScore.entityScore);
-      scores['player'][player]['mu'] += parseInt(val.options.data.entityScore.entityScore);
-      scores['team'][team]['count_fields']++;
-      scores['player'][player]['count_fields']++;
-      
-      var largestMu = scores['team'][team]['largest']['mu'];
-      if(largestMu === undefined || parseInt(largestMu.options.data.entityScore.entityScore) < parseInt(val.options.data.entityScore.entityScore)) {
-        largestMu = val;
-      }
-      scores['team'][team]['largest']['mu'] = largestMu;
-      
-      var largestMu = scores['player'][player]['largest']['mu'];
-      if(largestMu === undefined || parseInt(largestMu.options.data.entityScore.entityScore) < parseInt(val.options.data.entityScore.entityScore)) {
-        largestMu = val;
-      }
-      scores['player'][player]['largest']['mu'] = largestMu;
-    }
-  });
-  $.each(window.links, function(qk, link) {
-    somethingInView = true;
-    var team = getTeam(link.options.data);
-    var player = link.options.data.creator.creatorGuid;
-    window.plugin.portalslist.initPlayer(player, team);
-    scores['team'][team]['count_links']++;
-    scores['player'][player]['count_links']++;
-  });
-  $.each(window.portals, function(qk, portal) {
-    somethingInView = true;
-    var team = getTeam(portal.options.details);
-    var player = portal.options.details.captured.capturingPlayerId;
-    window.plugin.portalslist.initPlayer(player, team);
-    scores['team'][team]['count_portals']++;
-    scores['player'][player]['count_portals']++;
     
-    $.each(portal.options.details.resonatorArray.resonators, function(ind, reso) {
-      if(reso !== null) {  
-        somethingInView = true;
-        window.plugin.portalslist.initPlayer(reso.ownerGuid, team);
-        scores['team'][team]['count_resonators']++;
-        scores['player'][reso.ownerGuid]['count_resonators']++;
-      }
+        //var player = portal.options.details.captured.capturingPlayerId;
+        //get resonators informations
+        var resonators = []; // my local resonator array : reso level, reso deployed by, distance to portal, energy total, max 
+         
+        $.each(portal.options.details.resonatorArray.resonators, function(ind, reso) {
+          if(reso) {  
+            resonators[ind] = [reso.level, window.getPlayerName(reso.ownerGuid), reso.distanceToPortal, reso.energyTotal, RESO_NRG[reso.level]];
+          } else { resonators[ind] = [0,'',0,0,0]; }
+        }); 
+        // Sort resonators array by resonator level
+        resonators.sort(function (a, b) {return b[0] - a[0]});
+                       
+         //get shield informations 
+       	var shields = [];
+       	$.each(d.portalV2.linkedModArray, function(ind, mod) {
+           if (mod) 
+              shields[ind] = mod.rarity.capitalize().replace('_', ' ');
+           else
+              shields[ind] = ''; 
+        });
+        
+        var APgain= getAttackApGain(d).totalAp;
+        //console.log('ligne : ' + i + ' = ' + name + ', ' + team + ', ' + level + ', ' + resonators + ', ' + shields + ', ' + APgain);
+        var thisPortal = {'name':name,'team':team,'level':level,'resonators':resonators,'shields':shields,'APgain':APgain};
+        //console.log(thisPortal);
+        window.plugin.portalslist.listPortals.push(thisPortal);
+
     });
-  });
-  return somethingInView;
-};
-
-window.plugin.portalslist.percentSpan = function(percent, cssClass) {
-   var retVal = '';
-   if(percent > 0) {
-      retVal += '<span class="' + cssClass + ' mu_score" style="width:' + percent +'%;">' + percent;
-      if(percent >= 7) { // anything less than this and the text doesnt fit in the span.
-        retVal += '%';
-      }
-      retVal += '</span>';   
-   }
-   return retVal;
-};
-
-window.plugin.portalslist.teamTableRow = function(field,title) {
-  var scores = window.plugin.portalslist.scores['team'];
-  var retVal = '<tr><td>'
-   + title
-   + '</td><td class="number">'
-   + window.digits(scores[TEAM_RES][field])
-   + '</td><td class="number">'
-   + window.digits(scores[TEAM_ENL][field])
-   + '</td><td class="number">'
-   + window.digits(scores[TEAM_RES][field] + scores[TEAM_ENL][field])
-   + '</td></tr>';
-  return retVal;
-};
-
-window.plugin.portalslist.fieldInfo = function(field) {
-  var title = '';
-  var retVal = '';
-  
-  if(field !== undefined) {
-    var portal = window.portals[field.options.vertices.vertexA.guid];
-    if(portal !== undefined) {
-      title = ' @' + portal.options.details.portalV2.descriptiveText.TITLE;
-    }
-    
-    retVal = '<div title="' + title + '">'
-      + field.options.data.entityScore.entityScore
-      + ' - ' + window.getPlayerName(field.options.data.creator.creatorGuid)
-      + '</div>';
-  }  else {
-    retVal = 'N/A';
+    return retval;
   }
-  return retVal;
-};
-
-window.plugin.portalslist.playerTableRow = function(playerGuid) {
-  var scores = window.plugin.portalslist.scores['player'];
-  var retVal = '<tr class="'
-    + (scores[playerGuid]['team'] === TEAM_RES ? 'res' : 'enl')
-    +'"><td>'
-    + window.getPlayerName(playerGuid);
-    + '</td>';
-              
-  $.each(['mu','count_fields','count_links','count_portals','count_resonators'], function(i, field) {
-    retVal += '<td class="number">'
-      + window.digits(scores[playerGuid][field])
-      + '</td>';
-  });
-  retVal += '</tr>';
-  return retVal;
-};
-
-window.plugin.portalslist.playerTable = function(sortBy) {
-  
-  // Sort the playerGuid array by sortBy
-  window.plugin.portalslist.playerGuids.sort(function(a, b) {
-    var playerA = window.plugin.portalslist.scores['player'][a];
-    var playerB = window.plugin.portalslist.scores['player'][b];
-    var retVal = 0;
-    if(sortBy === 'names') {
-      retVal = window.getPlayerName(a).toLowerCase() < window.getPlayerName(b).toLowerCase() ? -1 : 1;
+    
+window.plugin.portalslist.displayPL = function() {   
+    var html = '';
+    if (window.plugin.portalslist.getPortals()) {
+         html += window.plugin.portalslist.portalTable();
+        console.log('OK');
     } else {
-      retVal = playerB[sortBy] - playerA[sortBy];
-    }
-    return retVal;
-  });
+    	console.log('KO');
+    };
+    alert('<div id="portalslist">' + html + '</div>');
+    $(".ui-dialog").addClass('ui-dialog-content');
   
-  var sort = window.plugin.portalslist.playerTableSort;
-  var scoreHtml = '<table>'
-    + '<tr><th ' + sort('names', sortBy) + '>Player</th>' 
-    + '<th ' + sort('mu', sortBy) + '>Mu</th>'
-    + '<th ' + sort('count_fields', sortBy) + '>Fields</th>'
-    + '<th ' + sort('count_links', sortBy) + '>Links</th>'
-    + '<th ' + sort('count_portals', sortBy) + '>Portals</th>'
-    + '<th ' + sort('count_resonators', sortBy) + '>Resonators</th></tr>';
-  $.each(window.plugin.portalslist.playerGuids, function(index, guid) {
-    scoreHtml += window.plugin.portalslist.playerTableRow(guid);
-  });
-  scoreHtml += '</table>';
-  
-  return scoreHtml;
-}
-
-// A little helper functon so the above isn't so messy
-window.plugin.portalslist.playerTableSort = function(name, by) {
-  var retVal = 'data-sort="' + name + '"';
-  if(name === by) {
-    retVal += ' class="sorted"';
-  }
-  return retVal;
-};
-
-//*****************************************************************    teo
-window.plugin.portalslist.portalGuids = new Array();   
-    
-    
-window.plugin.portalslist.initPortal = function(portal, team) {
-  var listP = window.plugin.portalslist.portals['portals'];
-  if(listP[portal] === undefined) {
-    listP[portal] = {};
-    listP[portal]['name'] = '';
-    listP[portal]['team'] = team;
-    listP[portal]['level'] = 0;
-    $.each(['L1','L2','L3','L4','L5','L6','L7','L8'], function(i, reso) {
-      listP[portal][reso]=0
-    });
-    $.each(['S1','S2','S3','S4'], function(i, shield) {
-      listP[portal][shield]=0;
-    });
-    listP[portal]['APgain']=0;
-    window.plugin.portalslist.portalGuids.push(portal);
-  }
-}    
-    
-    
-    
-    
-    
-    
-    
-window.plugin.portalslist.display = function() {
-  
-  var somethingInView = window.plugin.portalslist.compileStats();
-  var scores = window.plugin.portalslist.scores;
- 
-  var scoreHtml = '';
-  
-  if(somethingInView) {
-  
-    /*if(resMu + enlMu > 0) {
-      var resMuPercent = Math.round((resMu / (resMu + enlMu)) * 100);
-      scoreHtml += '<div class="mu_score" title="Resistance:  ' + resMu + ' MU Enlightenment:	' + enlMu + ' MU">'
-        + window.plugin.portalslist.percentSpan(resMuPercent, 'res')
-        + window.plugin.portalslist.percentSpan(100-resMuPercent, 'enl')
-        + '</div>';
-    }
-    
-    scoreHtml += '<table>'
-      + '<tr><th></th><th class="number">Resistance</th><th class="number">Enlightened</th><th class="number">Total</th></tr>'
-      + window.plugin.portalslist.teamTableRow('mu','Mu')
-      + window.plugin.portalslist.teamTableRow('count_fields','Fields')
-      + window.plugin.portalslist.teamTableRow('count_links','Links')
-      + window.plugin.portalslist.teamTableRow('count_portals','Portals')
-      + window.plugin.portalslist.teamTableRow('count_resonators','Resonators')
-      + '</table>';
-      
-    scoreHtml += '<table>'
-      + '<tr><th></th><th>Resistance</th><th>Enlightened</th></tr>'
-      + '<tr><td>Largest Field</td><td>'
-      + window.plugin.portalslist.fieldInfo(scores['team'][TEAM_RES]['largest']['mu'])
-      + '</td><td>'
-      + window.plugin.portalslist.fieldInfo(scores['team'][TEAM_ENL]['largest']['mu'])
-      + '</td></tr>'
-      + '</table>';
+   /* // Setup sorting
+   	$(document).on('click', '#players table th', function() {
+    	$('#players').html(window.plugin.scoreboard.playerTable($(this).data('sort')));
+  	});
     */
-    scoreHtml += '<div id="players">'
-      + window.plugin.portalslist.playerTable('mu')
-      + '</div>';
+ }
     
-    scoreHtml += '<div class="disclaimer">Click on player table headers to sort by that column. '
-      + 'Score is subject to portals available based on zoom level. '
-      + 'If names are unresolved try again. For best results wait until updates are fully loaded.</div>';
-  } else {
-    scoreHtml += 'You need something in view.';  
-  }
+window.plugin.portalslist.portalTable = function(sortBy) {
+  var portals=window.plugin.portalslist.listPortals;
+  //console.log(portals);
+  var html = '<table>'
+    + '<tr><th>Portal</th>' 
+    + '<th>Team</th>'
+    + '<th>Level</th>'
+    + '<th>R1</th>'
+    + '<th>R2</th>'
+    + '<th>R3</th>'
+    + '<th>R4</th>'
+    + '<th>R5</th>'
+    + '<th>R6</th>'
+    + '<th>R7</th>'
+    + '<th>R8</th>'
+    + '<th>Shield 1</th>'
+    + '<th>Shield 2</th>'
+    + '<th>Shield 3</th>'
+    + '<th>Shield 4</th>'
+    + '<th>AP Gain</th></tr>';
   
-  alert('<div id="portalslist">' + scoreHtml + '</div>');
-  $(".ui-dialog").addClass('ui-dialog-portalslist');
-  
-  // Setup sorting
-  $(document).on('click', '#players table th', function() {
-    $('#players').html(window.plugin.portalslist.playerTable($(this).data('sort')));
-  });
+  $.each(portals, function(ind, portal) {
+    html += '<tr class="' + (portal.team === 1 ? 'res' : 'enl') + '">'
+    + '<td>' + portal.name + '</td>'
+    + '<td>' + portal.team + '</td>'
+    + '<td>' + portal.level + '</td>'
+    + '<td>' + portal.resonators[0][0] + '</td>'
+    + '<td>' + portal.resonators[1][0] + '</td>'
+    + '<td>' + portal.resonators[2][0] + '</td>'
+    + '<td>' + portal.resonators[3][0] + '</td>'
+    + '<td>' + portal.resonators[4][0] + '</td>'
+    + '<td>' + portal.resonators[5][0] + '</td>'
+    + '<td>' + portal.resonators[6][0] + '</td>'
+    + '<td>' + portal.resonators[7][0] + '</td>'
+    + '<td>' + portal.shields[0] + '</td>'
+    + '<td>' + portal.shields[1] + '</td>'
+    + '<td>' + portal.shields[2] + '</td>'
+    + '<td>' + portal.shields[3] + '</td>'
+    + '<td>' + portal['APgain'] + '</td>';
+      
+    html+= '</tr>';
+ });
+ html+='</table>';
+ return html;
 }
-
+         
 var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
-  $('#toolbox').append('<a onclick="window.plugin.portalslist.display()">Portals List</a>');
-  $('head').append('<style>' +
-    '.ui-dialog-portalslist {position: absolute !important;top:50px !important;left:50px !important;max-width:1500px; width:800px !important;}' +
+  $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
+  $('head').append('<style>' + 
+    '.ui-dialog-content {padding: 12px; overflow-y: auto; overflow-x: hidden; max-height: 700px !important; top: 20px !important;left: 20px !important; width: 900px !important;max-width: 1200px !important;}' +
     '#portalslist table {margin-top:10px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
     '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
     '#portalslist table tr.res td { background-color: #005684; }' +
     '#portalslist table tr.enl td { background-color: #017f01; }' +
-    '#portalslist table tr:nth-child(even) td { opacity: .8 }' +
-    '#portalslist table tr:nth-child(odd) td { color: #ddd !important; }' +
-    '#portalslist table th { text-align:left }' +
+    '#portalslist table tr.L1 td { background-color: #017f01; }' +
+   // '#portalslist table tr:nth-child(even) td { opacity: .8 }' +
+   // '#portalslist table tr:nth-child(odd) td { color: #ddd !important; }' +
+    '#portalslist table th { text-align:left;}' +
     '#portalslist table td.number, #portalslist table th.number { text-align:right }' +
     '#players table th { cursor:pointer; text-align: right;}' +
     '#players table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
     '#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
- //   '.mu_score { margin-bottom: 10px; }' +
- //   '.mu_score span { overflow: hidden; padding-top:2px; padding-bottom: 2px; display: block; font-weight: bold; float: left; box-sizing: border-box; -moz-box-sizing:border-box; -webkit-box-sizing:border-box; }' +
- //   '.mu_score span.res { background-color: #005684; text-align: right; padding-right:5px; }' +
- //   '.mu_score span.enl { background-color: #017f01; padding-left: 5px; }' +
     '</style>');
 }
 
