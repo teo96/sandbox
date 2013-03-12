@@ -24,14 +24,14 @@ window.plugin.portalslist.listPortals = []; // structure : name, team, level, re
 window.plugin.portalslist.getPortals = function(){
     
     var retval=false;
-   
+    window.plugin.portalslist.listPortals = [];
     //get portals informations from IITC
     $.each(window.portals, function(i, portal) {
         retval=true;
         var d = portal.options.details;   
         var name =  d.portalV2.descriptiveText.TITLE;
         var team = portal.options.team;
-        var level = getPortalLevel(d).toString().replace('.', ',');
+        var level = getPortalLevel(d);
     
     
         //var player = portal.options.details.captured.capturingPlayerId;
@@ -47,7 +47,7 @@ window.plugin.portalslist.getPortals = function(){
         resonators.sort(function (a, b) {return b[0] - a[0]});
                        
          //get shield informations 
-       	var shields = [];
+           var shields = [];
        	$.each(d.portalV2.linkedModArray, function(ind, mod) {
            if (mod) 
               shields[ind] = mod.rarity.capitalize().replace('_', ' ');
@@ -74,7 +74,7 @@ window.plugin.portalslist.displayPL = function() {
     	console.log('KO');
     };
     alert('<div id="portalslist">' + html + '</div>');
-    $(".ui-dialog").addClass('ui-dialog-content');
+    $(".ui-dialog").addClass('ui-dialog-portalslist');
   
    /* // Setup sorting
    	$(document).on('click', '#players table th', function() {
@@ -88,8 +88,8 @@ window.plugin.portalslist.portalTable = function(sortBy) {
   //console.log(portals);
   var html = '<table>'
     + '<tr><th>Portal</th>' 
-    + '<th>Team</th>'
     + '<th>Level</th>'
+    + '<th>Team</th>'
     + '<th>R1</th>'
     + '<th>R2</th>'
     + '<th>R3</th>'
@@ -104,19 +104,21 @@ window.plugin.portalslist.portalTable = function(sortBy) {
     + '<th>Shield 4</th>'
     + '<th>AP Gain</th></tr>';
   
+  
+  //  html +='<table>';
   $.each(portals, function(ind, portal) {
     html += '<tr class="' + (portal.team === 1 ? 'res' : 'enl') + '">'
     + '<td>' + portal.name + '</td>'
+    + '<td class="L' + Math.floor(portal.level) +'">' +Math.floor(portal.level) + '</td>'
     + '<td>' + portal.team + '</td>'
-    + '<td>' + portal.level + '</td>'
-    + '<td>' + portal.resonators[0][0] + '</td>'
-    + '<td>' + portal.resonators[1][0] + '</td>'
-    + '<td>' + portal.resonators[2][0] + '</td>'
-    + '<td>' + portal.resonators[3][0] + '</td>'
-    + '<td>' + portal.resonators[4][0] + '</td>'
-    + '<td>' + portal.resonators[5][0] + '</td>'
-    + '<td>' + portal.resonators[6][0] + '</td>'
-    + '<td>' + portal.resonators[7][0] + '</td>'
+    + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
+    + '<td class="L' + portal.resonators[1][0] +'">' + portal.resonators[1][0] + '</td>'
+    + '<td class="L' + portal.resonators[2][0] +'">' + portal.resonators[2][0] + '</td>'
+    + '<td class="L' + portal.resonators[3][0] +'">' + portal.resonators[3][0] + '</td>'
+    + '<td class="L' + portal.resonators[4][0] +'">' + portal.resonators[4][0] + '</td>'
+    + '<td class="L' + portal.resonators[5][0] +'">' + portal.resonators[5][0] + '</td>'
+    + '<td class="L' + portal.resonators[6][0] +'">' + portal.resonators[6][0] + '</td>'
+    + '<td class="L' + portal.resonators[7][0] +'">' + portal.resonators[7][0] + '</td>'
     + '<td>' + portal.shields[0] + '</td>'
     + '<td>' + portal.shields[1] + '</td>'
     + '<td>' + portal.shields[2] + '</td>'
@@ -133,16 +135,20 @@ var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
   $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
   $('head').append('<style>' + 
-    '.ui-dialog-content {padding: 12px; overflow-y: auto; overflow-x: hidden; max-height: 700px !important; top: 20px !important;left: 20px !important; width: 900px !important;max-width: 1200px !important;}' +
+    '.ui-dialog-portalslist {position: absolute; top: 30px; left: 30px; max-width:800px !important; width:733px !important;}' +
     '#portalslist table {margin-top:10px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
     '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
-    '#portalslist table tr.res td { background-color: #005684; }' +
-    '#portalslist table tr.enl td { background-color: #017f01; }' +
-    '#portalslist table tr.L1 td { background-color: #017f01; }' +
-   // '#portalslist table tr:nth-child(even) td { opacity: .8 }' +
-   // '#portalslist table tr:nth-child(odd) td { color: #ddd !important; }' +
-    '#portalslist table th { text-align:left;}' +
-    '#portalslist table td.number, #portalslist table th.number { text-align:right }' +
+    '#portalslist table tr.res td {  background-color: #005684; }' +
+    '#portalslist table tr.enl td {  background-color: #017f01; }' +
+    '#portalslist table th { text-align:center;}' +
+    '#portalslist table td.L1 { background-color: #FECE5A !important; text-align:center; }' +
+	'#portalslist table td.L2 { background-color: #9900FF !important; text-align:center; }' +
+	'#portalslist table td.L3 { background-color: #FF7315 !important; text-align:center; }' +
+	'#portalslist table td.L4 { background-color: #E40000 !important; text-align:center; }' +
+	'#portalslist table td.L5 { background-color: #FD2992 !important; text-align:center; }' +
+	'#portalslist table td.L6 { background-color: #EB26CD !important; text-align:center; }' +
+	'#portalslist table td.L7 { background-color: #C124E0 !important; text-align:center; }' +
+	'#portalslist table td.L8 { background-color: #9627F4 !important; text-align:center; }' +                   
     '#players table th { cursor:pointer; text-align: right;}' +
     '#players table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
