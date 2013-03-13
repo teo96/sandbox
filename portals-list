@@ -1,10 +1,10 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           teo96: show list of portals
-// @version        0.0.1
+// @version        0.0.2
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
-// @updateURL      
-// @downloadURL    
+// @updateURL      https://raw.github.com/teo96/sandbox/master/portals-list    
+// @downloadURL    https://raw.github.com/teo96/sandbox/master/portals-list
 // @description    Display a sortable list of all localized portails with team, level, resonators informations
 // @include        https://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -56,9 +56,7 @@ window.plugin.portalslist.getPortals = function(){
         });
         
         var APgain= getAttackApGain(d).totalAp;
-        //console.log('ligne : ' + i + ' = ' + name + ', ' + team + ', ' + level + ', ' + resonators + ', ' + shields + ', ' + APgain);
         var thisPortal = {'name':name,'team':team,'level':level,'resonators':resonators,'shields':shields,'APgain':APgain};
-        //console.log(thisPortal);
         window.plugin.portalslist.listPortals.push(thisPortal);
 
     });
@@ -68,69 +66,98 @@ window.plugin.portalslist.getPortals = function(){
 window.plugin.portalslist.displayPL = function() {   
     var html = '';
     if (window.plugin.portalslist.getPortals()) {
-         html += window.plugin.portalslist.portalTable();
-        console.log('OK');
+         html += window.plugin.portalslist.portalTable('names');
+
     } else {
     	console.log('KO');
     };
     alert('<div id="portalslist">' + html + '</div>');
     $(".ui-dialog").addClass('ui-dialog-portalslist');
   
-   /* // Setup sorting
-   	$(document).on('click', '#players table th', function() {
-    	$('#players').html(window.plugin.scoreboard.playerTable($(this).data('sort')));
+    // Setup sorting
+   	$(document).on('click', '#portals table th', function() {
+    	$('#portals').html(window.plugin.portalslist.portalTable($(this).data('sort')));
   	});
-    */
+    
  }
     
 window.plugin.portalslist.portalTable = function(sortBy) {
-  var portals=window.plugin.portalslist.listPortals;
-  //console.log(portals);
-  var html = '<table>'
-    + '<tr><th>Portal</th>' 
-    + '<th>Level</th>'
-    + '<th>Team</th>'
-    + '<th>R1</th>'
-    + '<th>R2</th>'
-    + '<th>R3</th>'
-    + '<th>R4</th>'
-    + '<th>R5</th>'
-    + '<th>R6</th>'
-    + '<th>R7</th>'
-    + '<th>R8</th>'
-    + '<th>Shield 1</th>'
-    + '<th>Shield 2</th>'
-    + '<th>Shield 3</th>'
-    + '<th>Shield 4</th>'
-    + '<th>AP Gain</th></tr>';
-  
-  
-  //  html +='<table>';
-  $.each(portals, function(ind, portal) {
-    html += '<tr class="' + (portal.team === 1 ? 'res' : 'enl') + '">'
-    + '<td>' + portal.name + '</td>'
-    + '<td class="L' + Math.floor(portal.level) +'">' +Math.floor(portal.level) + '</td>'
-    + '<td>' + portal.team + '</td>'
-    + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
-    + '<td class="L' + portal.resonators[1][0] +'">' + portal.resonators[1][0] + '</td>'
-    + '<td class="L' + portal.resonators[2][0] +'">' + portal.resonators[2][0] + '</td>'
-    + '<td class="L' + portal.resonators[3][0] +'">' + portal.resonators[3][0] + '</td>'
-    + '<td class="L' + portal.resonators[4][0] +'">' + portal.resonators[4][0] + '</td>'
-    + '<td class="L' + portal.resonators[5][0] +'">' + portal.resonators[5][0] + '</td>'
-    + '<td class="L' + portal.resonators[6][0] +'">' + portal.resonators[6][0] + '</td>'
-    + '<td class="L' + portal.resonators[7][0] +'">' + portal.resonators[7][0] + '</td>'
-    + '<td>' + portal.shields[0] + '</td>'
-    + '<td>' + portal.shields[1] + '</td>'
-    + '<td>' + portal.shields[2] + '</td>'
-    + '<td>' + portal.shields[3] + '</td>'
-    + '<td>' + portal['APgain'] + '</td>';
-      
-    html+= '</tr>';
- });
- html+='</table>';
- return html;
+    var portals=window.plugin.portalslist.listPortals;
+        
+    //tri du tableau window.plugin.portalslist.listPortals
+    window.plugin.portalslist.listPortals.sort(function(a, b) {
+        var retVal = 0;
+        
+        console.log('appel de la fonction sort avec param a : ' + a + ' et b : ' + b);    
+        var portalA = window.plugin.portalslist.listPortals[a];
+        var portalB = window.plugin.portalslist.listPortals[b];
+        //mettre un switch et intégrer shields dans tri alphanum
+        
+        if(sortBy === 'names') {
+            retVal = portalA['name'].toLowerCase() < portalB['name'].toLowerCase() ? -1 : 1;
+        } else {
+            retVal = portalB[sortBy] - portalA[sortBy];
+        }
+        
+        return retVal;
+    });  
+    
+    var sort = window.plugin.portalslist.portalTableSort;
+    //console.log(portals);
+    var html = '<table>'
+    + '<tr><th ' + sort('names', sortBy) + '>Portal</th>' 
+    + '<th ' + sort('level', sortBy) + '>Level</th>'
+    + '<th ' + sort('team', sortBy) + '>Team</th>'
+    + '<th ' + sort('r1', sortBy) + '>R1</th>'
+    + '<th ' + sort('r2', sortBy) + '>R2</th>'
+    + '<th ' + sort('r3', sortBy) + '>R3</th>'
+    + '<th ' + sort('r4', sortBy) + '>R4</th>'
+    + '<th ' + sort('r5', sortBy) + '>R5</th>'
+    + '<th ' + sort('r6', sortBy) + '>R6</th>'
+    + '<th ' + sort('r7', sortBy) + '>R7</th>'
+    + '<th ' + sort('r8', sortBy) + '>R8</th>'
+    + '<th ' + sort('s1', sortBy) + '>Shield 1</th>'
+    + '<th ' + sort('s2', sortBy) + '>Shield 2</th>'
+    + '<th ' + sort('s3', sortBy) + '>Shield 3</th>'
+    + '<th ' + sort('s4', sortBy) + '>Shield 4</th>'
+    + '<th ' + sort('APgain', sortBy) + '>AP Gain</th></tr>';
+    
+    
+    $.each(portals, function(ind, portal) {
+        html += '<tr class="' + (portal.team === 1 ? 'res' : 'enl') + '">'
+        + '<td>' + portal.name + '</td>'
+        + '<td class="L' + Math.floor(portal.level) +'">' +Math.floor(portal.level) + '</td>'
+        + '<td>' + portal.team + '</td>'
+        + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
+        + '<td class="L' + portal.resonators[1][0] +'">' + portal.resonators[1][0] + '</td>'
+        + '<td class="L' + portal.resonators[2][0] +'">' + portal.resonators[2][0] + '</td>'
+        + '<td class="L' + portal.resonators[3][0] +'">' + portal.resonators[3][0] + '</td>'
+        + '<td class="L' + portal.resonators[4][0] +'">' + portal.resonators[4][0] + '</td>'
+        + '<td class="L' + portal.resonators[5][0] +'">' + portal.resonators[5][0] + '</td>'
+        + '<td class="L' + portal.resonators[6][0] +'">' + portal.resonators[6][0] + '</td>'
+        + '<td class="L' + portal.resonators[7][0] +'">' + portal.resonators[7][0] + '</td>'
+        + '<td>' + portal.shields[0] + '</td>'
+        + '<td>' + portal.shields[1] + '</td>'
+        + '<td>' + portal.shields[2] + '</td>'
+        + '<td>' + portal.shields[3] + '</td>'
+        + '<td>' + portal.APgain + '</td>';
+        
+        html+= '</tr>';
+    });
+    html+='</table>';
+    return html;
 }
-         
+
+// A little helper functon so the above isn't so messy
+window.plugin.portalslist.portalTableSort = function(name, by) {
+  var retVal = 'data-sort="' + name + '"';
+  if(name === by) {
+    retVal += ' class="sorted"';
+  }
+  return retVal;
+};
+
+
 var setup =  function() {
   $('body').append('<div id="portalslist" style="display:none;"></div>');
   $('#toolbox').append('<a onclick="window.plugin.portalslist.displayPL()">Portals List</a>');
@@ -149,8 +176,8 @@ var setup =  function() {
 	'#portalslist table td.L6 { background-color: #EB26CD !important; text-align:center; }' +
 	'#portalslist table td.L7 { background-color: #C124E0 !important; text-align:center; }' +
 	'#portalslist table td.L8 { background-color: #9627F4 !important; text-align:center; }' +                   
-    '#players table th { cursor:pointer; text-align: right;}' +
-    '#players table th:nth-child(1) { text-align: left;}' +
+    '#portalslist table th { cursor:pointer; text-align: right;}' +
+    '#portalslist table th:nth-child(1) { text-align: left;}' +
     '#portalslist table th.sorted { color:#FFCE00; }' +
     '#portalslist .disclaimer { margin-top:10px; font-size:10px; }' +
     '</style>');
