@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             iitc-plugin-portals-list@teo96
 // @name           teo96: show list of portals
-// @version        0.0.2
+// @version        0.0.3
 // @namespace      https://github.com/breunigs/ingress-intel-total-conversion
 // @updateURL      https://raw.github.com/teo96/sandbox/master/portals-list    
 // @downloadURL    https://raw.github.com/teo96/sandbox/master/portals-list
@@ -66,7 +66,7 @@ window.plugin.portalslist.getPortals = function(){
 window.plugin.portalslist.displayPL = function() {   
     var html = '';
     if (window.plugin.portalslist.getPortals()) {
-         html += window.plugin.portalslist.portalTable('names');
+         html += window.plugin.portalslist.portalTable('team');
 
     } else {
     	console.log('KO');
@@ -75,8 +75,8 @@ window.plugin.portalslist.displayPL = function() {
     $(".ui-dialog").addClass('ui-dialog-portalslist');
   
     // Setup sorting
-   	$(document).on('click', '#portals table th', function() {
-    	$('#portals').html(window.plugin.portalslist.portalTable($(this).data('sort')));
+    $(document).on('click', '#portalslist table th', function() {    	
+        $('#portalslist').html(window.plugin.portalslist.portalTable($(this).data('sort')));
   	});
     
  }
@@ -87,16 +87,49 @@ window.plugin.portalslist.portalTable = function(sortBy) {
     //tri du tableau window.plugin.portalslist.listPortals
     window.plugin.portalslist.listPortals.sort(function(a, b) {
         var retVal = 0;
-        
-        console.log('appel de la fonction sort avec param a : ' + a + ' et b : ' + b);    
-        var portalA = window.plugin.portalslist.listPortals[a];
-        var portalB = window.plugin.portalslist.listPortals[b];
-        //mettre un switch et intégrer shields dans tri alphanum
-        
-        if(sortBy === 'names') {
-            retVal = portalA['name'].toLowerCase() < portalB['name'].toLowerCase() ? -1 : 1;
-        } else {
-            retVal = portalB[sortBy] - portalA[sortBy];
+        switch (sortBy) {
+            case 'names':
+                retVal = a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+                break;
+            case 'r1':
+                retVal = b.resonators[0][0] - a.resonators[0][0];
+                break;
+            case 'r2':
+                retVal = b.resonators[1][0] - a.resonators[1][0];
+                break;
+            case 'r3':
+                retVal = b.resonators[2][0] - a.resonators[2][0];
+                break;
+            case 'r4':
+                retVal = b.resonators[3][0] - a.resonators[3][0];
+                break;
+            case 'r5':
+                retVal = b.resonators[4][0] - a.resonators[4][0];
+                break;
+            case 'r6':
+                retVal = b.resonators[5][0] - a.resonators[5][0];
+                break;
+            case 'r7':
+                retVal = b.resonators[6][0] - a.resonators[6][0];
+                break;
+            case 'r8':
+                retVal = b.resonators[7][0] - a.resonators[7][0];
+                break;
+            case 's1':
+                retVal = a.shields[0].toLowerCase() > b.shields[0].toLowerCase() ? -1 : 1;
+                break;
+            case 's2':
+                retVal = a.shields[1].toLowerCase() > b.shields[1].toLowerCase() ? -1 : 1;
+                break;
+            case 's3':
+                retVal = a.shields[2].toLowerCase() > b.shields[2].toLowerCase() ? -1 : 1;
+                break;
+            case 's4':
+                retVal = a.shields[3].toLowerCase() > b.shields[3].toLowerCase() ? -1 : 1;
+                break;
+            default:
+                retVal = b[sortBy] - a[sortBy];    
+                break;
         }
         
         return retVal;
@@ -127,7 +160,7 @@ window.plugin.portalslist.portalTable = function(sortBy) {
         html += '<tr class="' + (portal.team === 1 ? 'res' : 'enl') + '">'
         + '<td>' + portal.name + '</td>'
         + '<td class="L' + Math.floor(portal.level) +'">' +Math.floor(portal.level) + '</td>'
-        + '<td>' + portal.team + '</td>'
+        + '<td style="text-align:center;">' + portal.team + '</td>'
         + '<td class="L' + portal.resonators[0][0] +'">' + portal.resonators[0][0] + '</td>'
         + '<td class="L' + portal.resonators[1][0] +'">' + portal.resonators[1][0] + '</td>'
         + '<td class="L' + portal.resonators[2][0] +'">' + portal.resonators[2][0] + '</td>'
@@ -164,7 +197,7 @@ var setup =  function() {
   $('head').append('<style>' + 
     '.ui-dialog-portalslist {position: absolute; top: 30px; left: 30px; max-width:800px !important; width:733px !important;}' +
     '#portalslist table {margin-top:10px;	border-collapse: collapse; empty-cells: show; width:100%; clear: both;}' +
-    '#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
+'#portalslist table td, #portalslist table th {border-bottom: 1px solid #0b314e; padding:3px; color:white; background-color:#1b415e}' +
     '#portalslist table tr.res td {  background-color: #005684; }' +
     '#portalslist table tr.enl td {  background-color: #017f01; }' +
     '#portalslist table th { text-align:center;}' +
