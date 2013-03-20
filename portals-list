@@ -11,7 +11,7 @@
 // ==/UserScript==
 
 /* whatsnew
-* 0.0.5.1 : Add power charge information into a new column
+* 0.0.6 : Add power charge information into a new column + bugfix
 * 0.0.5 : Filter portals by clicking on 'All portals', 'Res Portals' or 'Enl Portals'
 * 0.0.4 : Add link to portals name, one click to display full information in portal panel, double click to zoom on portal, hover to show address
 * 0.0.3 : sorting ascending/descending and add numbers of portals by faction on top on table
