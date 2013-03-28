@@ -42,12 +42,12 @@ window.plugin.portalslist.listPortals = []; // structure : name, team, level, re
 window.plugin.portalslist.sortOrder=-1;    
 window.plugin.portalslist.enlP = 0;
 window.plugin.portalslist.resP = 0;
+window.plugin.portalslist.numberOfPortals=[8][2]; // structure : Number of Res Lx, Number of Enl Lx, x from 0 to 8 right now
 window.plugin.portalslist.filter=0;
 
 //fill the listPortals array with portals avalaible on the map (level filtered portals will not appear in the table)
 window.plugin.portalslist.getPortals = function(){
     //filter : 0 = All, 1 = Res, 2 = Enl
-    //console.log('** getPortals');
     var retval=false;
     
     window.plugin.portalslist.listPortals = [];
@@ -56,11 +56,17 @@ window.plugin.portalslist.getPortals = function(){
         
         retval=true;
         var d = portal.options.details;   
-        //todo delete , from name
+        
         var name =  d.portalV2.descriptiveText.TITLE;
         var address = d.portalV2.descriptiveText.ADDRESS;
         var img = d.imageByUrl && d.imageByUrl.imageUrl ? d.imageByUrl.imageUrl : DEFAULT_PORTAL_IMG;
         var team = portal.options.team;
+        var level = getPortalLevel(d).toFixed(2);
+        
+        //inc arrays number of portals to display statitics in the headr
+        //window.plugin.portalslist.numberOfPortals[Math.floor(level)][team]++;
+        
+        
         switch (team){
             case 1 :
                 window.plugin.portalslist.resP++;
@@ -69,7 +75,7 @@ window.plugin.portalslist.getPortals = function(){
                 window.plugin.portalslist.enlP++;
                 break;
         }
-        var level = getPortalLevel(d).toFixed(2);
+        
         var guid = portal.options.guid;
         
         
@@ -101,7 +107,7 @@ window.plugin.portalslist.getPortals = function(){
         var thisPortal = {'portal':d,'name':name,'team':team,'level':level,'guid':guid, 'resonators':resonators,'energyratio' : Math.floor(energy/maxenergy*100), 'shields':shields, 'APgain':APgain, 'EAP' : (energy/APgain).toFixed(2), 'energy': energy, 'maxenergy':maxenergy, 'lat':portal._latlng.lat, 'lng':portal._latlng.lng, 'address': address, 'img' : img};
         window.plugin.portalslist.listPortals.push(thisPortal);
     });
-    
+    console.log(window.plugin.portalslist.numberOfPortals);
     return retval;
 }
 
@@ -317,7 +323,11 @@ window.plugin.portalslist.exportCSV = function(){
     $.each(portals, function(ind, portal) {
         
         if (filter === 0 || filter === portal.team){
-            csv += portal.name + sep 
+            //delete , from name 'cause CSV delimiter is also ,
+            var name =  portal.name;
+            while (name.indexOf(',')>0) { name = name.replace(',', ' ');}
+
+            csv += name + sep 
               + portal.level + sep
               + portal.team + sep;
            
