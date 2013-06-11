@@ -1,9 +1,9 @@
 // ==UserScript==
-// @id             iitc-plugin-portals-list@teo96
-// @name           IITC plugin: show list of portals
-// @version        0.0.13.20130522.175822
+// @id             teo96-plugin-portals-list@teo96
+// @name           teo96 plugin: show list of portals
+// @version        0.0.14
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
-// @description    [jonatkins-2013-05-22-175822] Display a sortable list of all visible portals with full details about the team, resonators, shields, etc.
+// @description    Display a sortable list of all visible portals with full details about the team, resonators, shields, etc.
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -12,6 +12,7 @@
 // ==/UserScript==
 
 /* whatsnew
+* 0.0.14 : added mitigation value for shields
 * 0.0.12: Use dialog() instead of alert so the user can drag the box around
 * 0.0.11: Add nominal energy column and # links, fix sort bug when opened even amounts of times, nits
 * 0.0.10: Fixed persistent css problem with alert
