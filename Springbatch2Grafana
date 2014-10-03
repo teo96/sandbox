@@ -1,0 +1,43 @@
+// ==UserScript==
+// @name       Add grafana links to springbatch console
+// @namespace 
+// @version    0.1
+// @description fait à l'arrache ...
+// @match      http://monserveur/monappli/jobs/executions
+// @copyright  2014, Me
+
+
+//Ajout de la colonne dans le header du tableau
+var header1=document.getElementsByClassName('bordered-table')[0].getElementsByTagName('tr');
+var titreCol=document.createElement('th');
+titreCol.innerHTML='Grafana';
+header1[0].appendChild(titreCol);
+
+//on cherche les lignes des run
+var runsodd = document.getElementsByClassName('name-sublevel1-odd');
+var runseven = document.getElementsByClassName('name-sublevel1-even');
+var runs = Array.prototype.slice.call(runsodd).concat(Array.prototype.slice.call(runseven))
+
+for (i=0; i<runs.length; i++)
+{
+    cols = runs[i].getElementsByTagName('td');
+    DateDeb=cols[3].innerText;
+    HeureDeb=cols[4].innerText;
+    Duree=cols[5].innerText;
+    
+    HeureDuree = parseInt(Duree.slice(0,1));
+    MinuteDuree = parseInt(Duree.slice(3,5));
+    SecondeDuree = parseInt(Duree.slice(6,8));
+    
+    StartTime = new Date(DateDeb + "T" + HeureDeb +"+0200");
+    EndTime = new Date(StartTime.getTime() + (((HeureDuree*60 + MinuteDuree)*60 + SecondeDuree)*1000));
+    url = "http://XXXXXXXX/grafana/#/dashboard/file/dashboard.json?from="+ StartTime.getTime() + "&to="+ EndTime.getTime();
+   
+    var col1=document.createElement('td');
+    col1.innerHTML='<a target="_blank" href="' + url + '">Grafana</a>';   
+    runs[i].appendChild(col1);
+}
+
+
+// ==/UserScript==
+
